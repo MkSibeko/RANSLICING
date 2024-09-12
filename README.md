@@ -1,0 +1,2 @@
+# RANSLICING
+ cmappo ran slicing
