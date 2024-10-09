@@ -17,13 +17,11 @@ from ranenv.env.ran_environment import RanEnv
 from scenario_creator import create_env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.algorithm import Algorithm
+from ray.tune.stopper import ExperimentPlateauStopper
 
 PENALTY = 100
-EVALUATION_STEPS = 150000
-# EVALUATION_STEPS = 10
-# TRAIN_STEPS = 25600 # 39936  # Must be a multiple of 256
-# TRAIN_STEPS = 1
-TRAIN_STEPS = 5120
+EVALUATION_STEPS = 1000
+TRAIN_STEPS = 256
 
 # create training env for PPO
 
@@ -85,7 +83,7 @@ def load_and_eval_model(node_env: RanEnv, checkpoint: str):
         checkpoint (str): file path to checkpoint
     """
 
-    for i in range(30):
+    for i in range(10):
         print(f"---------------- |RUN-{i}|----------------------------------------------------")
         loaded_policy = Algorithm.from_checkpoint(checkpoint)
         node_env.set_evaluation(EVALUATION_STEPS)
@@ -140,38 +138,20 @@ def resume_expirement():
     
 
 if __name__ == "__main__":
-    # resume_expirement()
-    # exit(1)
-    # for i in range(3):
-    rng = default_rng(seed = 2)
-    node_b = create_env(rng, 2, penalty = PENALTY)
-    env = RanEnv(node_b, PENALTY, verbose=True, file_path= os.path.abspath(f'./multrun_results_new_run_trained_on_2_eg/{2}'))
-    agents = set(env.agents)
-    pp(agents)
-    # parallel_api_test(env, num_cycles=1)
-    env_ppz = ParallelPettingZooEnv(env)
-    register_env("my_env", lambda env: env_ppz)
-    # test_load_eval(env)
-    # resume_expirement()
-    # sys.exit(1)
-    # test_load_eval(env)
-    # resume_expirement()
-    # model: AlgorithmConfig = configure_model(env_ppz, agents)
-    # results_path = train_model(model).path + "/checkpoint_000000"
+    for i in range(3):
+        rng = default_rng(seed = i)
+        node_b = create_env(rng, i, penalty = PENALTY)
+        env = RanEnv(node_b, PENALTY, verbose=True, file_path= os.path.abspath(f'./final_final_longrun/scenario_{i}'))
+        agents = set(env.agents)
+        pp(agents)
+        env_ppz = ParallelPettingZooEnv(env)
+        register_env("my_env", lambda env: env_ppz)
+        # model: AlgorithmConfig = configure_model(env_ppz, agents)
+        # results_path = train_model(model).path + "/checkpoint_000000"
+        # env.save_result(i, f'./final_results/training_data/scenario_{i}')
+        # results_path = "C:/Users\Mpilo\Documents\@SGELA\COS700\CODE\PROJECT_ME\ppo\PPO_2024-09-06_18-39-23\pp\checkpoint_000000"
+        results_path = "C:/Users\Mpilo\Documents\@SGELA\COS700\CODE\RANSLICING\ppo\PPO_2024-10-08_04-05-21\pp\checkpoint_000000"
+        load_and_eval_model(env, results_path)
+        break
 
-    results_path = "C:/Users\Mpilo\Documents\@SGELA\COS700\CODE\PROJECT_ME\ppo\PPO_2024-09-06_18-39-23\pp\checkpoint_000000"
-    # pp(results_path)
-    load_and_eval_model(env, results_path)
-    sys.exit(1) # test the above
-    # parser = add_rllib_example_script_args(
-    #     default_iters=2,
-    #     default_timesteps=10,
-    #     default_reward=0.0,
-    # )
-    # args = parser.parse_args()
-    # # pp(args)
-    # results = run_rllib_example_script_experiment(model, args)
-    # results_path = results.get_best_result().path
-    # pp(results_path)
-    # load_and_eval_model(env, results_path)
     

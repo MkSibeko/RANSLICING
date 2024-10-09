@@ -6,6 +6,7 @@ from pettingzoo import ParallelEnv
 from gymnasium import Space, spaces
 from node_b import NodeB
 from slice_l1 import BaseSlice
+import math
 
 
 class RanEnv(ParallelEnv):
@@ -19,7 +20,7 @@ class RanEnv(ParallelEnv):
         "name": "ran_slicing_env",
     }
 
-    def __init__(self, node_b: NodeB = None, penalty = 100, verbose = False, file_path = os.path.abspath('./results/')):
+    def __init__(self, node_b: NodeB = None, penalty = 100, verbose = False, file_path = os.path.abspath('./results/'), rewardfunc: callable = None):
         self.node_b: NodeB = node_b
         self.penalty = penalty
         self.n_prbs = node_b.n_prbs
@@ -41,6 +42,7 @@ class RanEnv(ParallelEnv):
         self.action_history = {}
         self.reward_history = {}
         self.cost_history = {}
+        self.reward_func = rewardfunc
         for _, slice_l1 in enumerate(node_b.slices_l1):
             self.action_spaces[slice_l1.id] = spaces.Box(low=0, high = slice_l1.n_prbs, shape=(1,), dtype=int)
             self.observation_spaces[slice_l1.id] = spaces.Box(low=-float('inf'), high=+float('inf'),
@@ -59,6 +61,9 @@ class RanEnv(ParallelEnv):
         Args:
             actions (dict): dictionary of actions keyed by the agent ID
         """
+
+        def sig(x):
+            return 1/(1 + np.exp(-x))
         rewards = {}
         done = {}
         costs = {}
@@ -82,8 +87,11 @@ class RanEnv(ParallelEnv):
         total_violation = self.node_b.get_total_violations(info)
         for slice_l1 in self.node_b.slices_l1:
             violation = info[slice_l1.id]['violations']
-            cost = 0.4*violation + 0.6*total_violation
-            reward = 0.8*(actions[slice_l1.id][0]/used_prbs) + 1.2*mean_ratio
+            cost = math.exp(0.5*violation + 0.3*total_violation + 0.2*(violation*5/(total_violation+0.001)))
+            # util_ratio = 0.8*(actions[slice_l1.id][0]/used_prbs) + 1.2*mean_ratio
+            reward = sig(2 - cost)
+
+            # reward = self.reward_func(violation, total_violation, actions[slice_l1.id][0], used_prbs, mean_ratio)
         
             rewards[slice_l1.id] = float(reward)
             costs[slice_l1.id] = cost
@@ -97,7 +105,7 @@ class RanEnv(ParallelEnv):
                 self.cost_history[slice_l1.id][self.step_counter] = float(cost)
 
             if self.verbose:
-                pp(f"Slice: {slice_l1.id}, step: {self.step_counter}, reward: {float(reward)}, violations: {violation}")
+                pp(f"Slice: {slice_l1.id}, step: {self.step_counter}, reward: {float(reward)}, curr_violations: {violation}, total_violation: {total_violation}")
 
         self.step_counter += 1
         return obs, rewards, done, done, info
@@ -105,6 +113,11 @@ class RanEnv(ParallelEnv):
     def state(self):
         # global state
         return self.node_b.get_state()
+    
+    # def low_latent_space_state(self):
+    #     norm_state = self.node_b.get_state()
+
+
 
     @lru_cache(maxsize=None)
     def action_space(self, agent) -> Space:
@@ -147,7 +160,7 @@ class RanEnv(ParallelEnv):
                                     reward = self.reward_history[id],
                                     resources = self.action_history[id])
     
-    def save_result(self, run):
+    def save_result(self, run, pathtouse: str = None):
         total_violations = np.array([])
         total_rewards = np.array([])
         total_actions = np.array([])
@@ -165,7 +178,8 @@ class RanEnv(ParallelEnv):
                 total_rewards = add_arrays(total_rewards/self.node_b.n_slices_l1, self.violation_history[id]/self.node_b.n_slices_l1)
                 total_actions = add_arrays(total_actions, self.action_history[id])
         
-        slicepath = f"{self.file_path}/total/"
+        path = pathtouse if pathtouse else self.file_path
+        slicepath = f"{path}/total/"
         if not os.path.exists(slicepath):
             os.makedirs(slicepath)
         np.savez(slicepath+f"history_{run}", violation = total_violations,

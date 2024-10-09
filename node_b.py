@@ -23,7 +23,10 @@ class NodeB():
         return sum(list(map(lambda slice: slice.n_prbs, self.slices_l1)))
 
     def get_mean_prbs_ratio(self):
-        return sum(list(map(lambda slice: slice.n_prbs/self.get_used_n_prbs(), self.slices_l1)))/self.n_slices_l1
+        try:
+            return sum(list(map(lambda slice: slice.n_prbs/self.get_used_n_prbs(), self.slices_l1)))/self.n_slices_l1
+        except Exception as e:
+            return 0
 
     def get_total_violations(self, info):
         return sum(list(map(lambda slice: info[slice.id]["violations"], self.slices_l1)))
@@ -59,7 +62,7 @@ class NodeB():
                 state = l1.get_state()
             else:
                 state = np.add(state, l1.get_state()) # l1.get_state()*l1.state_weight learn this state_weight for each agent ?
-        return state
+        return state/self.n_slices_l1
 
     def get_states(self):
         states = {}

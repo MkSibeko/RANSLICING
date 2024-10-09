@@ -121,7 +121,7 @@ class SliceRANmMTC:
         return arrival_list, []
 
     def reset_info(self):
-        self.info = {'delay': 0, 'avg_rep': 0, 'devices': 0}
+        self.info = {'delay': 0, 'avg_rep': 0, 'devices': 0, 'cost': 0, 'violation': 0, 'reward': 0}
         self.slot_counter = 0
 
     def reset_state(self):
@@ -271,7 +271,7 @@ class SliceRANeMBB:
 
     def reset_info(self):
         self.info = {'cbr_traffic': 0, 'cbr_th': 0, 'cbr_prb': 0, 'cbr_queue':0, 'cbr_snr': 0,\
-                    'vbr_traffic': 0, 'vbr_th': 0, 'vbr_prb': 0, 'vbr_queue': 0, 'vbr_snr': 0}
+                    'vbr_traffic': 0, 'vbr_th': 0, 'vbr_prb': 0, 'vbr_queue': 0, 'vbr_snr': 0,  'cost': 0, 'violation': 0, 'reward': 0}
         self.slot_counter = 0
 
     def reset_state(self):

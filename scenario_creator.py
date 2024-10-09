@@ -39,13 +39,8 @@ scenario_3 = {
     'n_mmtc': 4
 }
 
-scenario_4 = {
-    'n_prbs': 70,
-    'n_embb': 1,
-    'n_mmtc': 1
-}
 
-scenarios = [scenario_1, scenario_2, scenario_3, scenario_4]
+scenarios = [scenario_1, scenario_2, scenario_3]
 
 
 # -------------------- eMBB parameters -------------------------
@@ -77,7 +72,7 @@ SLA_embb = {
 
 state_variables_embb = ['cbr_traffic','cbr_th', 'cbr_prb', \
                         'cbr_queue', 'cbr_snr', 'vbr_traffic', \
-                        'vbr_th', 'vbr_prb', 'vbr_queue', 'vbr_snr']
+                        'vbr_th', 'vbr_prb', 'vbr_queue', 'vbr_snr', 'cost', 'violation', 'reward']
 
 # -------------------- mMTC parameters -------------------------
 
@@ -87,7 +82,7 @@ MTC_description = {
     'period_set': [1000, 50000, 10000, 15000, 20000, 25000, 50000, 100000]
 }
 
-state_variables_mmtc = ['devices', 'avg_rep', 'delay']
+state_variables_mmtc = ['devices', 'avg_rep', 'delay', 'cost', 'violation', 'reward']
 
 SLA_mmtc = {
     'delay': 300
@@ -120,7 +115,10 @@ def create_env(rng, n, slots_per_step = 50, propagation_type = 'macro_cell_urban
         'vbr_th': 10e6 * time_per_step, 
         'vbr_prb': 35 * slots_per_step, 
         'vbr_queue': 10e4 * slots_per_step, 
-        'vbr_snr': 35 * slots_per_step
+        'vbr_snr': 35 * slots_per_step,
+        'cost': 1, 
+        'violation': 1, 
+        'reward': 1
     }
 
     # -------------------- mMTC normalization constants -----------------------
@@ -128,7 +126,10 @@ def create_env(rng, n, slots_per_step = 50, propagation_type = 'macro_cell_urban
     norm_const_mmtc = {
         'devices': 100 * slots_per_step,
         'avg_rep': 100 * slots_per_step,
-        'delay': 100 * slots_per_step
+        'delay': 100 * slots_per_step,
+        'cost': 1, 
+        'violation': 1, 
+        'reward': 1
     }
 
     # ------------------- auxiliary functions -----------------------
