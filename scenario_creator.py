@@ -39,8 +39,13 @@ scenario_3 = {
     'n_mmtc': 4
 }
 
+scenario_4 = {
+    'n_prbs': 70,
+    'n_embb': 1,
+    'n_mmtc': 1
+}
 
-scenarios = [scenario_1, scenario_2, scenario_3]
+scenarios = [scenario_1, scenario_2, scenario_3, scenario_4]
 
 
 # -------------------- eMBB parameters -------------------------

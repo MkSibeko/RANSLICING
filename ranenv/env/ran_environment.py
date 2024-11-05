@@ -87,14 +87,16 @@ class RanEnv(ParallelEnv):
         total_violation = self.node_b.get_total_violations(info)
         for slice_l1 in self.node_b.slices_l1:
             violation = info[slice_l1.id]['violations']
-            cost = math.exp(0.5*violation + 0.3*total_violation + 0.2*(violation*5/(total_violation+0.001)))
-            # util_ratio = 0.8*(actions[slice_l1.id][0]/used_prbs) + 1.2*mean_ratio
-            reward = sig(2 - cost)
 
-            # reward = self.reward_func(violation, total_violation, actions[slice_l1.id][0], used_prbs, mean_ratio)
+            if self.reward_func is None:
+                cost = math.exp(0.5*violation + 0.3*total_violation + 0.2*(violation*5/(total_violation+0.001)))
+                reward = sig(2 - cost)
+            else:
+                self.verbose = False
+                reward = self.reward_func(violation, total_violation)
         
             rewards[slice_l1.id] = float(reward)
-            costs[slice_l1.id] = cost
+            # costs[slice_l1.id] = cost
             done[slice_l1.id] = False
 
             if self.eval_steps and self.step_counter < self.eval_steps:
@@ -102,7 +104,7 @@ class RanEnv(ParallelEnv):
                 self.violation_history[slice_l1.id][self.step_counter] = violation
                 self.reward_history[slice_l1.id][self.step_counter] = float(reward)
                 self.action_history[slice_l1.id][self.step_counter] = actions[slice_l1.id][0]
-                self.cost_history[slice_l1.id][self.step_counter] = float(cost)
+                # self.cost_history[slice_l1.id][self.step_counter] = float(cost)
 
             if self.verbose:
                 pp(f"Slice: {slice_l1.id}, step: {self.step_counter}, reward: {float(reward)}, curr_violations: {violation}, total_violation: {total_violation}")
